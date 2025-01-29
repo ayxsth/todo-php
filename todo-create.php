@@ -1,62 +1,31 @@
-<!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-100">
+<?php
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todo App</title>
+include_once "utils.php";
+include_once "Database.php";
 
-  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-</head>
+$config = include_once "config.php";
 
-<body class="h-full">
-  <div class="min-h-full">
-    <nav class="bg-gray-800">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between w-full">
-          <div class="flex items-center w-full">
-            <div class="flex w-full justify-between">
-              <div class="flex items-baseline space-x-4">
-                <a href="." class="rounded-md px-3 py-2 text-sm font-medium text-white transition duration-150 ease-in-out hover:bg-gray-700 hover:text-gray-100">Home</a>
-                <a href="todos.php" class="rounded-md px-3 py-2 text-sm font-medium text-white transition duration-150 ease-in-out hover:bg-gray-700 hover:text-gray-100">Todos</a>
-              </div>
+$title = "Create Todo";
 
-              <div class="flex items-baseline space-x-4">
-                <a href="login.php" class="rounded-md px-3 py-2 text-sm font-medium text-white bg-blue-600 transition duration-150 ease-in-out hover:bg-blue-700">Login</a>
-                <a href="register.php" class="rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition duration-150 ease-in-out">Register</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
+// Check if the form has been submitted and the request method is POST
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+  $title = $_POST["title"];
+  $description = $_POST["description"];
+  $completed = $_POST["completed"] ?? 0;
 
-    <header class="bg-white shadow-sm">
-      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Create Todo</h1>
-      </div>
-    </header>
+  $db = new Database($config["database"]);
 
-    <main>
-      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div class="w-full flex flex-col">
-          <form class="mt-8 w-md space-y-6" method="POST">
-            <div>
-              <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
-              <input type="text" name="title" id="title" required class="mt-1 block w-full px-3 py-2 rounded-md border-2 border-gray-300">
-            </div>
+  $query = "INSERT INTO todos (title, description, completed, created_by) VALUES (:title, :description, :completed, :createdBy)";
 
-            <div>
-              <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-              <textarea name="description" id="description" rows="4" required class="mt-1 block w-full px-3 py-2 rounded-md border-2 border-gray-300"></textarea>
-            </div>
+  $id = $db->query($query, [
+    "title" => $title,
+    "description" => $description,
+    "completed" => $completed,
+    "createdBy" => 1
+  ])->insert();
 
-            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Create</button>
-          </form>
-        </div>
-      </div>
-    </main>
-  </div>
-</body>
+  header("Location: todo.php?id=$id");
+}
 
-</html>
+// Show the form if the request method is not POST
+include_once "views/todo-create.view.php";
