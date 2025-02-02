@@ -5,6 +5,9 @@ include_once "Database.php";
 
 $config = include_once "config.php";
 
+// Start a session
+session_start();
+
 $title = "Create Todo";
 
 // Check if the form has been submitted and the request method is POST
@@ -15,16 +18,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
   $db = new Database($config["database"]);
 
-  $query = "INSERT INTO todos (title, description, completed, created_by) VALUES (:title, :description, :completed, :createdBy)";
+  $query = "INSERT INTO todos (title, description, created_by) VALUES (:title, :description, :createdBy)";
 
   $id = $db->query($query, [
     "title" => $title,
     "description" => $description,
-    "completed" => $completed,
-    "createdBy" => 1
+    "createdBy" => $_SESSION["user"]["id"]
   ])->insert();
 
   header("Location: todo.php?id=$id");
+
+  // Stop the script
+  exit();
 }
 
 // Show the form if the request method is not POST
