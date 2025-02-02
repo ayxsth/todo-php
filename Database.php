@@ -14,10 +14,17 @@ class Database {
     $this->connection = new PDO($this->dsn, $this->username, $this->password, $this->options);
   }
 
-  public function query($sql) {
+  public function query($sql, $params = []) {
     $statement = $this->connection->prepare($sql);
-    $statement->execute();
+    $statement->execute($params);
 
     return $statement;
+  }
+
+  public function insert($sql, $params = []) {
+    $statement = $this->connection->prepare($sql);
+    $statement->execute($params);
+
+    return $this->connection->lastInsertId();
   }
 }

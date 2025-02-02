@@ -1,62 +1,59 @@
-<!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-100">
+<?php
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todo App</title>
+include 'utils.php';
+include 'Database.php';
 
-  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-</head>
+$title = 'Login';
 
-<body class="h-full">
-  <div class="min-h-full">
-    <nav class="bg-gray-800">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between w-full">
-          <div class="flex items-center w-full">
-            <div class="flex w-full justify-between">
-              <div class="flex items-baseline space-x-4">
-                <a href="." class="rounded-md px-3 py-2 text-sm font-medium text-white transition duration-150 ease-in-out hover:bg-gray-700 hover:text-gray-100">Home</a>
-                <a href="todos.php" class="rounded-md px-3 py-2 text-sm font-medium text-white transition duration-150 ease-in-out hover:bg-gray-700 hover:text-gray-100">Todos</a>
-              </div>
+session_start();
 
-              <div class="flex items-baseline space-x-4">
-                <a href="login.php" class="rounded-md px-3 py-2 text-sm font-medium text-white bg-blue-600 transition duration-150 ease-in-out hover:bg-blue-700">Login</a>
-                <a href="register.php" class="rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition duration-150 ease-in-out">Register</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
+$errors = [];
 
-    <header class="bg-white shadow-sm">
-      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Login</h1>
-      </div>
-    </header>
+if (isset($_SESSION['user'])) {
+  header('Location: todos.php');
+}
 
-    <main>
-      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div class="w-full flex flex-col">
-          <form class="mt-8 w-md space-y-6" method="POST">
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-              <input type="email" name="email" id="email" required class="mt-1 block w-full px-3 py-2 rounded-md border-2 border-gray-300">
-            </div>
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $email = $_POST['email'];
+  $password = $_POST['password'];
 
-            <div>
-              <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-              <input type="password" name="password" id="password" required class="mt-1 block w-full px-3 py-2 rounded-md border-2 border-gray-300">
-            </div>
+  if (empty($email)) {
+    $errors['email'] = 'Email is required';
+  } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $errors['email'] = 'Email is invalid';
+  }
 
-            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Login</button>
-          </form>
-        </div>
-      </div>
-    </main>
-  </div>
-</body>
+  if (empty($password)) {
+    $errors['password'] = 'Password is required';
+  } elseif (strlen($password) < 6) {
+    $errors['password'] = 'Password must be at least 6 characters';
+  }
 
-</html>
+  if (empty($errors)) {
+  $db = new Database();
+
+    $sql = "SELECT * FROM users WHERE email = :email";
+
+    $user = $db->query($sql, [
+      'email' => $email
+    ])->fetch();
+
+    $isPasswordCorrect = password_verify($password, $user['password']);
+
+    if (!$user || !$isPasswordCorrect) {
+      $errors['password'] = 'Email or password is incorrect';
+    }
+
+    if (empty($errors)){
+      $_SESSION['user'] = [
+        'id' => $user['id'],
+        'name' => $user['name'],
+        'email' => $user['email']
+      ];
+
+      header('Location: todos.php');
+    }
+  }
+}
+
+include 'views/login.view.php';

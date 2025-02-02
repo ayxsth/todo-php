@@ -3,6 +3,8 @@
 include 'Database.php';
 include 'utils.php';
 
+session_start();
+
 $title = "Todo";
 
 $db = new Database();
